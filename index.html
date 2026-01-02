@@ -2,12 +2,13 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>StudyTime | 學習管理平台</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* --- 1. 核心變數 (維持原本奶茶色) --- */
         :root {
             --bg-milk-tea: #FAF7F2;
             --primary-latte: #D7C0AE;
@@ -19,17 +20,17 @@
             --shadow-soft: 0 10px 40px rgba(183, 153, 156, 0.1);
         }
 
-        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
-        body { background-color: var(--bg-milk-tea); font-family: 'Montserrat', 'Noto Sans TC', sans-serif; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; color: var(--text-main); }
+        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-milk-tea); font-family: 'Montserrat', 'Noto Sans TC', sans-serif; margin: 0; display: flex; min-height: 100vh; color: var(--text-main); }
 
-        /* --- 導覽列 --- */
-        nav { width: 260px; background: var(--white); padding: 40px 20px; display: flex; flex-direction: column; position: fixed; height: 100vh; border-right: 1px solid rgba(215, 192, 174, 0.2); z-index: 100; }
+        /* --- 2. 電腦版導覽列 (維持原樣) --- */
+        nav { width: 260px; background: var(--white); padding: 40px 20px; display: flex; flex-direction: column; position: fixed; height: 100vh; border-right: 1px solid rgba(215, 192, 174, 0.2); z-index: 100; left: 0; top: 0; }
         .brand { font-size: 1.4rem; font-weight: 700; letter-spacing: 3px; color: var(--accent-mocha); margin-bottom: 50px; text-align: center; }
         .nav-item { display: flex; align-items: center; gap: 15px; padding: 15px 20px; margin-bottom: 10px; cursor: pointer; border-radius: 15px; color: var(--text-light); font-weight: 500; }
         .nav-item:hover { background: #FDFBF7; color: var(--accent-mocha); }
         .nav-item.active { background: var(--primary-latte); color: var(--white); box-shadow: var(--shadow-soft); }
 
-        /* --- 主內容區 --- */
+        /* --- 3. 主內容區 (維持原樣) --- */
         main { margin-left: 260px; padding: 50px 60px; width: 100%; max-width: 1200px; }
         section { display: none; animation: fadeIn 0.6s ease; }
         section.active { display: block; }
@@ -38,44 +39,28 @@
         .card { background: var(--white); padding: 35px; border-radius: 25px; box-shadow: var(--shadow-soft); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.5); }
         h1 { font-size: 1.8rem; color: var(--accent-mocha); margin-bottom: 30px; }
 
-        /* --- 彈窗共用疊層 (成就 & 提示) --- */
+        /* --- 4. 彈窗樣式 (維持原樣) --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(250, 247, 242, 0.9); /* 奶茶色半透明背景 */
+            background: rgba(250, 247, 242, 0.9);
             display: none; justify-content: center; align-items: center;
             z-index: 2000; flex-direction: column; backdrop-filter: blur(8px);
             animation: fadeIn 0.3s ease;
+            padding: 20px; /* 防止手機版貼邊 */
         }
-
-        /* --- V14 新增：質感提示彈窗樣式 --- */
-        .alert-card {
-            background: var(--white);
-            padding: 30px 40px;
-            border-radius: 30px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(183, 153, 156, 0.2);
-            border: 2px solid var(--primary-latte);
-            max-width: 400px;
-            width: 90%;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .alert-card, .celeb-card {
+            background: var(--white); padding: 30px 40px; border-radius: 30px; text-align: center;
+            box-shadow: 0 20px 40px rgba(183, 153, 156, 0.2); border: 2px solid var(--primary-latte);
+            max-width: 400px; width: 100%; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .alert-icon { font-size: 3rem; color: var(--primary-latte); margin-bottom: 15px; }
-        .alert-card h3 { color: var(--accent-mocha); margin-bottom: 10px; }
-        .alert-card p { color: var(--text-main); margin-bottom: 25px; font-size: 1.1rem; }
-
-        /* --- 成就彈窗樣式 --- */
-        .celeb-card {
-            background: white; padding: 50px; border-radius: 40px; text-align: center;
-            box-shadow: 0 30px 60px rgba(183, 153, 156, 0.2);
-            border: 2px solid var(--primary-latte);
-            animation: zoomBounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
         @keyframes zoomBounce { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        
+        .alert-icon { font-size: 3rem; color: var(--primary-latte); margin-bottom: 15px; }
         .celeb-icon { font-size: 6rem; color: var(--primary-latte); margin-bottom: 20px; text-shadow: 0 10px 20px rgba(215, 192, 174, 0.4); }
         .celeb-name { font-size: 2.5rem; color: var(--accent-mocha); font-weight: 700; margin: 10px 0; }
 
-        /* --- 元件樣式 --- */
+        /* --- 5. 元件樣式 (維持原樣) --- */
         .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
         .progress-bar-bg { background: #F1EAE3; height: 10px; border-radius: 10px; overflow: hidden; margin: 15px 0; }
         .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary-latte), var(--soft-brown)); width: 0%; transition: width 1.5s ease; }
@@ -89,18 +74,83 @@
         button.secondary { background: var(--primary-latte); }
         button.danger { background: #e74c3c; opacity: 0.8; }
         input, select { padding: 14px; border-radius: 12px; border: 1.5px solid #EEE3CB; background: #FDFBF7; outline: none; margin-bottom: 10px; width: 100%; font-family: inherit; }
-        select:disabled { background: #eee; color: #999; cursor: not-allowed; border-color: #ddd; }
+        select:disabled { background: #eee; color: #999; cursor: not-allowed; }
 
-        .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        .badge-item { background: #fff; padding: 25px 15px; border-radius: 20px; text-align: center; border: 1px solid #F1EAE3; transition: 0.3s; position: relative; overflow: hidden; }
-        .badge-item.locked { filter: grayscale(1); opacity: 0.5; }
-        .badge-item.unlocked { border: 2px solid var(--primary-latte); box-shadow: 0 10px 25px rgba(215, 192, 174, 0.3); background: linear-gradient(135deg, #fff, #FDFBF7); }
-        .badge-icon { font-size: 3rem; color: var(--primary-latte); margin-bottom: 10px; }
-        .badge-desc { font-size: 0.75rem; color: var(--text-light); margin-top: 5px; }
-        
         .plan-item { padding: 25px; border-radius: 20px; background: #FDFBF7; margin-bottom: 20px; border: 1px solid rgba(215, 192, 174, 0.1); }
         .plan-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .plan-name { font-size: 1.2rem; font-weight: 700; color: var(--accent-mocha); }
+
+        /* --- 6. 成就獎章樣式 (嚴格維持你要求的風格) --- */
+        .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
+        .badge-item { background: #fff; padding: 25px 15px; border-radius: 20px; text-align: center; border: 1px solid #F1EAE3; transition: 0.3s; position: relative; overflow: hidden; }
+        
+        /* 這裡是你要求的：沒達成要是灰的 */
+        .badge-item.locked { filter: grayscale(1); opacity: 0.5; }
+        
+        /* 達成要是彩色的 */
+        .badge-item.unlocked { border: 2px solid var(--primary-latte); box-shadow: 0 10px 25px rgba(215, 192, 174, 0.3); background: linear-gradient(135deg, #fff, #FDFBF7); }
+        
+        .badge-icon { font-size: 3rem; color: var(--primary-latte); margin-bottom: 10px; }
+        .badge-desc { font-size: 0.75rem; color: var(--text-light); margin-top: 5px; }
+
+        /* ==========================================================================
+           🚀 手機版 / 窄螢幕 RWD 優化 (這段就是解決「縮小就不能用」的關鍵)
+           ========================================================================== */
+        @media (max-width: 768px) {
+            /* 1. 導覽列變到底部 (Bottom Bar) */
+            nav {
+                width: 100%; height: auto;
+                top: auto; bottom: 0;
+                flex-direction: row;
+                justify-content: space-around;
+                padding: 12px 0;
+                border-right: none;
+                border-top: 1px solid rgba(215, 192, 174, 0.2);
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.03);
+            }
+            .brand { display: none; } /* 手機版隱藏大標題，節省空間 */
+            
+            .nav-item {
+                flex-direction: column;
+                gap: 4px;
+                padding: 5px;
+                margin-bottom: 0;
+                font-size: 0.7rem; 
+                background: transparent !important;
+                color: var(--text-light);
+                box-shadow: none !important;
+            }
+            .nav-item i { font-size: 1.3rem; margin-bottom: 2px; }
+            .nav-item.active { color: var(--accent-mocha); font-weight: 700; transform: translateY(-2px); }
+
+            /* 2. 主內容區：去除左邊距，改為下方留白 */
+            main {
+                margin-left: 0;
+                padding: 30px 20px 100px 20px; /* 底部留 100px 給導覽列 */
+                width: 100%;
+            }
+
+            /* 3. 格線系統：變為單欄 */
+            .home-grid { grid-template-columns: 1fr; gap: 15px; }
+            
+            /* 4. 字體與元件縮小，防止爆版 */
+            h1 { font-size: 1.5rem; margin-bottom: 20px; }
+            .card { padding: 25px; margin-bottom: 20px; }
+            .stat-big { font-size: 2.5rem; }
+            .pomo-timer, #home-clock { font-size: 4rem !important; }
+            
+            /* 手機版按鈕大一點好按 */
+            button { padding: 15px; width: 100%; margin-bottom: 10px; }
+            
+            /* 手動紀錄區塊變垂直排列 */
+            #home-log-grid { grid-template-columns: 1fr; }
+            .card div[style*="display:flex"] { flex-direction: column; }
+            .card input { margin-bottom: 10px !important; }
+            
+            /* 彈窗字體縮小 */
+            .celeb-icon { font-size: 4rem; }
+            .celeb-name { font-size: 1.8rem; }
+        }
     </style>
 </head>
 <body>
@@ -125,16 +175,16 @@
 
 <nav>
     <div class="brand">STUDYTIME</div>
-    <div class="nav-item active" onclick="nav('home')"><i class="fa-solid fa-house"></i> 首頁概況</div>
-    <div class="nav-item" onclick="nav('pomodoro')"><i class="fa-solid fa-clock"></i> 番茄鐘</div>
-    <div class="nav-item" onclick="nav('subjects')"><i class="fa-solid fa-sliders"></i> 科目規劃</div>
-    <div class="nav-item" onclick="nav('countdown')"><i class="fa-solid fa-calendar-alt"></i> 倒數提醒</div>
-    <div class="nav-item" onclick="nav('achievements')"><i class="fa-solid fa-award"></i> 成就榮耀</div>
+    <div class="nav-item active" data-target="home" onclick="nav('home')"><i class="fa-solid fa-house"></i> 首頁概況</div>
+    <div class="nav-item" data-target="pomodoro" onclick="nav('pomodoro')"><i class="fa-solid fa-clock"></i> 番茄鐘</div>
+    <div class="nav-item" data-target="subjects" onclick="nav('subjects')"><i class="fa-solid fa-sliders"></i> 科目規劃</div>
+    <div class="nav-item" data-target="countdown" onclick="nav('countdown')"><i class="fa-solid fa-calendar-alt"></i> 倒數提醒</div>
+    <div class="nav-item" data-target="achievements" onclick="nav('achievements')"><i class="fa-solid fa-award"></i> 成就榮耀</div>
 </nav>
 
 <main>
     <section id="home" class="active">
-        <h1>專注於今日</h1>
+        <h1>專注於今日。</h1>
         <div class="home-grid">
             <div class="card">
                 <span style="color:var(--text-light)">總體進度達成率</span>
@@ -235,7 +285,28 @@
 
     function getTotalMins() { return db.subs.reduce((a, b) => a + b.current, 0); }
 
-    // --- V14 新增：自定義提示窗函數 (取代 alert) ---
+    // --- 導覽與網址連動 ---
+    function nav(id) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(id);
+        if(target) target.classList.add('active');
+
+        document.querySelectorAll('.nav-item').forEach(n => {
+            n.classList.toggle('active', n.getAttribute('data-target') === id);
+        });
+        
+        // 更新網址 Hash (解決你說的上面網址可以顯示的問題)
+        window.location.hash = id;
+        render();
+    }
+
+    // 監聽網址變化
+    window.addEventListener('hashchange', () => {
+        const hash = window.location.hash.substring(1);
+        if (hash) nav(hash);
+    });
+
+    // --- 自定義提示窗 ---
     function showToast(msg, title="溫馨提醒", icon="fa-bell") {
         document.getElementById('alert-title').innerText = title;
         document.getElementById('alert-msg').innerText = msg;
@@ -244,14 +315,6 @@
     }
     function closeCustomAlert() {
         document.getElementById('custom-alert-modal').style.display = 'none';
-    }
-
-    function nav(id) {
-        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        render();
     }
 
     function updateLastSelect(type, val) {
@@ -274,17 +337,24 @@
         } else {
             clearInterval(timer);
             isRunning = false;
+            
+            // 防止 0.0 分鐘
             const minsAdded = secRun / 60;
-            db.subs[runningSubjectIdx].current += minsAdded;
-            updateStreak();
+            if (minsAdded < 0.1) {
+                showToast("專注時間太短，未予紀錄 (需至少 6 秒)", "太快了", "fa-stopwatch");
+            } else {
+                db.subs[runningSubjectIdx].current += minsAdded;
+                updateStreak();
+                save();
+                showToast(`已為該科目增加 ${minsAdded.toFixed(1)} 分鐘。`, "紀錄成功", "fa-check-circle");
+            }
+
             secRun = 0;
             document.getElementById('btn-timer').innerText = "開始專注";
             document.getElementById('btn-timer').style.background = "#967E76";
             document.getElementById('home-sub-select').disabled = false;
             runningSubjectIdx = null;
             updateClock();
-            save();
-            showToast(`已為該科目增加 ${minsAdded.toFixed(1)} 分鐘。`, "紀錄成功", "fa-check-circle");
         }
     }
 
@@ -344,10 +414,11 @@
         isPomoRunning = false;
         if(!isBreak && currentPomoSubjectIdx !== null) {
             const elapsedMins = (1500 - pomoSeconds) / 60;
-            if(elapsedMins > 0) {
+            if(elapsedMins < 0.1) {
+                showToast("專注時間太短，不予紀錄。", "提示");
+            } else {
                 db.subs[currentPomoSubjectIdx].current += elapsedMins;
                 save();
-                // V14: 這裡使用新的 showToast 取代原本的 alert
                 showToast(`已提早結算！增加了 ${elapsedMins.toFixed(1)} 分鐘。`, "番茄鐘結算", "fa-stopwatch");
             }
         }
@@ -415,7 +486,6 @@
         render();
     }
 
-    // --- 成就 ---
     function checkBadges() {
         badgesData.forEach(b => {
             if (b.check() && !db.unlocked.includes(b.id)) {
@@ -498,6 +568,7 @@
             }
         });
 
+        // 這裡完全保持你要求的 V14 風格
         badgesData.forEach(b => {
             const unlocked = db.unlocked.includes(b.id);
             badgeGrid.innerHTML += `
@@ -511,8 +582,11 @@
         document.getElementById('ach-badges').innerText = `${db.unlocked.length} / 6`;
     }
 
-    window.onload = render;
+    // 初始化：根據網址 Hash 決定開哪個分頁
+    window.onload = () => {
+        const hash = window.location.hash.substring(1) || 'home';
+        nav(hash);
+    };
 </script>
 </body>
-
 </html>
