@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyTime | 學習管理平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-milk-tea: #FAF7F2;
+            --primary-latte: #D7C0AE;
+            --accent-mocha: #967E76;
+            --soft-brown: #B7999C;
+            --text-main: #5D5C58;
+            --text-light: #A8A7A1;
+            --white: #ffffff;
+            --shadow-soft: 0 10px 40px rgba(183, 153, 156, 0.1);
+        }
+
+        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        body { background-color: var(--bg-milk-tea); font-family: 'Montserrat', 'Noto Sans TC', sans-serif; margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; color: var(--text-main); }
+
+        /* --- 導覽列 --- */
+        nav { width: 260px; background: var(--white); padding: 40px 20px; display: flex; flex-direction: column; position: fixed; height: 100vh; border-right: 1px solid rgba(215, 192, 174, 0.2); z-index: 100; }
+        .brand { font-size: 1.4rem; font-weight: 700; letter-spacing: 3px; color: var(--accent-mocha); margin-bottom: 50px; text-align: center; }
+        .nav-item { display: flex; align-items: center; gap: 15px; padding: 15px 20px; margin-bottom: 10px; cursor: pointer; border-radius: 15px; color: var(--text-light); font-weight: 500; }
+        .nav-item:hover { background: #FDFBF7; color: var(--accent-mocha); }
+        .nav-item.active { background: var(--primary-latte); color: var(--white); box-shadow: var(--shadow-soft); }
+
+        /* --- 主內容區 --- */
+        main { margin-left: 260px; padding: 50px 60px; width: 100%; max-width: 1200px; }
+        section { display: none; animation: fadeIn 0.6s ease; }
+        section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--white); padding: 35px; border-radius: 25px; box-shadow: var(--shadow-soft); margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.5); }
+        h1 { font-size: 1.8rem; color: var(--accent-mocha); margin-bottom: 30px; }
+
+        /* --- 彈窗共用疊層 (成就 & 提示) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(250, 247, 242, 0.9); /* 奶茶色半透明背景 */
+            display: none; justify-content: center; align-items: center;
+            z-index: 2000; flex-direction: column; backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* --- V14 新增：質感提示彈窗樣式 --- */
+        .alert-card {
+            background: var(--white);
+            padding: 30px 40px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(183, 153, 156, 0.2);
+            border: 2px solid var(--primary-latte);
+            max-width: 400px;
+            width: 90%;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .alert-icon { font-size: 3rem; color: var(--primary-latte); margin-bottom: 15px; }
+        .alert-card h3 { color: var(--accent-mocha); margin-bottom: 10px; }
+        .alert-card p { color: var(--text-main); margin-bottom: 25px; font-size: 1.1rem; }
+
+        /* --- 成就彈窗樣式 --- */
+        .celeb-card {
+            background: white; padding: 50px; border-radius: 40px; text-align: center;
+            box-shadow: 0 30px 60px rgba(183, 153, 156, 0.2);
+            border: 2px solid var(--primary-latte);
+            animation: zoomBounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes zoomBounce { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        .celeb-icon { font-size: 6rem; color: var(--primary-latte); margin-bottom: 20px; text-shadow: 0 10px 20px rgba(215, 192, 174, 0.4); }
+        .celeb-name { font-size: 2.5rem; color: var(--accent-mocha); font-weight: 700; margin: 10px 0; }
+
+        /* --- 元件樣式 --- */
+        .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .progress-bar-bg { background: #F1EAE3; height: 10px; border-radius: 10px; overflow: hidden; margin: 15px 0; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary-latte), var(--soft-brown)); width: 0%; transition: width 1.5s ease; }
+        .stat-big { font-size: 3rem; font-weight: 300; color: var(--accent-mocha); font-family: 'Montserrat'; }
+        
+        .pomo-timer { font-size: 6rem; font-weight: 200; color: var(--accent-mocha); margin: 20px 0; text-align: center; }
+        .pomo-controls { display: flex; justify-content: center; gap: 15px; }
+
+        button { padding: 12px 25px; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; background: var(--accent-mocha); color: white; }
+        button:hover { transform: translateY(-3px); filter: brightness(1.1); }
+        button.secondary { background: var(--primary-latte); }
+        button.danger { background: #e74c3c; opacity: 0.8; }
+        input, select { padding: 14px; border-radius: 12px; border: 1.5px solid #EEE3CB; background: #FDFBF7; outline: none; margin-bottom: 10px; width: 100%; font-family: inherit; }
+        select:disabled { background: #eee; color: #999; cursor: not-allowed; border-color: #ddd; }
+
+        .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+        .badge-item { background: #fff; padding: 25px 15px; border-radius: 20px; text-align: center; border: 1px solid #F1EAE3; transition: 0.3s; position: relative; overflow: hidden; }
+        .badge-item.locked { filter: grayscale(1); opacity: 0.5; }
+        .badge-item.unlocked { border: 2px solid var(--primary-latte); box-shadow: 0 10px 25px rgba(215, 192, 174, 0.3); background: linear-gradient(135deg, #fff, #FDFBF7); }
+        .badge-icon { font-size: 3rem; color: var(--primary-latte); margin-bottom: 10px; }
+        .badge-desc { font-size: 0.75rem; color: var(--text-light); margin-top: 5px; }
+        
+        .plan-item { padding: 25px; border-radius: 20px; background: #FDFBF7; margin-bottom: 20px; border: 1px solid rgba(215, 192, 174, 0.1); }
+        .plan-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .plan-name { font-size: 1.2rem; font-weight: 700; color: var(--accent-mocha); }
+    </style>
+</head>
+<body>
+
+<div id="custom-alert-modal" class="modal-overlay" onclick="closeCustomAlert()">
+    <div class="alert-card" onclick="event.stopPropagation()">
+        <div class="alert-icon"><i id="alert-icon-i" class="fa-solid fa-bell"></i></div>
+        <h3 id="alert-title">溫馨提醒</h3>
+        <p id="alert-msg">訊息內容...</p>
+        <button onclick="closeCustomAlert()" style="width: 100%;">好的</button>
+    </div>
+</div>
+
+<div id="celebration-overlay" class="modal-overlay" onclick="closeCeleb()">
+    <div class="celeb-card" onclick="event.stopPropagation()">
+        <div class="celeb-icon" id="celeb-icon-box"><i class="fa-solid fa-award"></i></div>
+        <div class="celeb-title" style="color: var(--text-light); letter-spacing: 2px;">ACHIEVEMENT UNLOCKED</div>
+        <div class="celeb-name" id="celeb-name">踏出第一步</div>
+        <button style="margin-top: 20px; width: 100%;" onclick="closeCeleb()">太棒了！</button>
+    </div>
+</div>
+
+<nav>
+    <div class="brand">STUDYTIME</div>
+    <div class="nav-item active" onclick="nav('home')"><i class="fa-solid fa-house"></i> 首頁概況</div>
+    <div class="nav-item" onclick="nav('pomodoro')"><i class="fa-solid fa-clock"></i> 番茄鐘</div>
+    <div class="nav-item" onclick="nav('subjects')"><i class="fa-solid fa-sliders"></i> 科目規劃</div>
+    <div class="nav-item" onclick="nav('countdown')"><i class="fa-solid fa-calendar-alt"></i> 倒數提醒</div>
+    <div class="nav-item" onclick="nav('achievements')"><i class="fa-solid fa-award"></i> 成就榮耀</div>
+</nav>
+
+<main>
+    <section id="home" class="active">
+        <h1>專注於今日。</h1>
+        <div class="home-grid">
+            <div class="card">
+                <span style="color:var(--text-light)">總體進度達成率</span>
+                <div class="stat-big" id="home-pct">0%</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="home-bar"></div></div>
+            </div>
+            <div class="card" id="home-pinned-card">
+                <span style="color:var(--text-light)" id="home-pinned-title">未設定考試</span>
+                <div class="stat-big" id="home-days">--</div>
+                <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 5px;">DAYS LEFT</div>
+            </div>
+        </div>
+
+        <div class="card" style="text-align: center;">
+            <select id="home-sub-select" style="max-width: 300px; margin-bottom: 10px;" onchange="updateLastSelect('home', this.value)"></select>
+            <div style="font-size: 4.5rem; font-weight: 200; color: var(--accent-mocha); margin: 10px 0;" id="home-clock">00:00:00</div>
+            <button id="btn-timer" onclick="handleTimer()" style="width: 200px;">開始專注</button>
+        </div>
+
+        <h3 style="color: var(--accent-mocha); margin-top: 40px;"><i class="fa-solid fa-pen-nib"></i> 快速紀錄 (分鐘)</h3>
+        <div id="home-log-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;"></div>
+
+        <div style="text-align: center; margin-top: 60px; border-top: 1px solid #EEE3CB; padding-top: 30px;">
+            <p style="color: var(--text-light); font-size: 0.9rem;">想清空資料？</p>
+            <button class="danger" onclick="resetSystem()">重置所有資料</button>
+        </div>
+    </section>
+
+    <section id="pomodoro">
+        <h1>番茄鐘專注</h1>
+        <div class="card" style="text-align: center;">
+            <div style="color: var(--soft-brown); font-weight: 700; font-size: 1.2rem; margin-bottom: 10px;" id="pomo-status">準備好要專注了嗎？</div>
+            <select id="pomo-sub-select" style="max-width: 400px; display: block; margin: 0 auto 20px;" onchange="updateLastSelect('pomo', this.value)"></select>
+            <div class="pomo-timer" id="pomo-display">25:00</div>
+            <div class="pomo-controls">
+                <button onclick="startPomo()" id="btn-pomo-start">開始番茄鐘</button>
+                <button class="secondary" onclick="stopPomoAndSave()">放棄並結算</button>
+            </div>
+            <p style="color: var(--text-light); margin-top: 20px;">完成自動累積 25 分鐘，中途放棄可手動結算。</p>
+        </div>
+    </section>
+
+    <section id="subjects">
+        <h1>科目規劃</h1>
+        <div class="card">
+            <h3>建立新學習科目</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px;">
+                <input type="text" id="sub-name" placeholder="例如：計算機概論">
+                <input type="number" id="sub-target" placeholder="目標時數 (小時)">
+                <button onclick="saveNewSub()">建立</button>
+            </div>
+        </div>
+        <h3 style="color: var(--accent-mocha);"><i class="fa-solid fa-list-check"></i> 已規劃科目詳情 (分鐘)</h3>
+        <div id="subjects-plan-list"></div>
+    </section>
+
+    <section id="countdown">
+        <h1>倒數提醒</h1>
+        <div class="card">
+            <h3>新增目標日期</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px;">
+                <input type="text" id="exam-name" placeholder="目標名稱 (如: 統測)">
+                <input type="date" id="exam-date">
+                <button onclick="addExam()">新增</button>
+            </div>
+        </div>
+        <div id="exam-list-container"></div>
+    </section>
+
+    <section id="achievements">
+        <h1>成就獎章</h1>
+        <div class="home-grid" style="margin-bottom: 30px;">
+            <div class="card" style="text-align: center;"><span style="color:var(--text-light)">連續學習天數</span><div class="stat-big" id="ach-streak">0</div></div>
+            <div class="card" style="text-align: center;"><span style="color:var(--text-light)">解鎖徽章</span><div class="stat-big" id="ach-badges">0 / 6</div></div>
+        </div>
+        <div class="badge-grid" id="badge-grid"></div>
+    </section>
+</main>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('study_v14')) || {
+        subs: [], exams: [], pinnedId: null, streak: 0, lastDate: "", unlocked: [],
+        lastHomeIdx: "", lastPomoIdx: ""
+    };
+
+    const badgeSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+    let timer; let secRun = 0; let isRunning = false; let runningSubjectIdx = null;
+    let pomoTimer; let pomoSeconds = 1500; let isPomoRunning = false; let isBreak = false; let currentPomoSubjectIdx = null;
+
+    const badgesData = [
+        { id: 'b1', name: '初試啼聲', icon: 'fa-leaf', desc: '建立第 1 個科目', check: () => db.subs.length > 0 },
+        { id: 'b2', name: '十分努力', icon: 'fa-coffee', desc: '累積 10 分鐘', check: () => getTotalMins() >= 10 },
+        { id: 'b3', name: '三日之火', icon: 'fa-fire', desc: '連續 3 天', check: () => db.streak >= 3 },
+        { id: 'b4', name: '百里之行', icon: 'fa-gem', desc: '累積 100 分鐘', check: () => getTotalMins() >= 100 },
+        { id: 'b5', name: '科目完修', icon: 'fa-flag-checkered', desc: '單科達標', check: () => db.subs.some(s => s.current >= s.target) },
+        { id: 'b6', name: '學霸降臨', icon: 'fa-crown', desc: '累積 600 分鐘', check: () => getTotalMins() >= 600 }
+    ];
+
+    function getTotalMins() { return db.subs.reduce((a, b) => a + b.current, 0); }
+
+    // --- V14 新增：自定義提示窗函數 (取代 alert) ---
+    function showToast(msg, title="溫馨提醒", icon="fa-bell") {
+        document.getElementById('alert-title').innerText = title;
+        document.getElementById('alert-msg').innerText = msg;
+        document.getElementById('alert-icon-i').className = `fa-solid ${icon}`;
+        document.getElementById('custom-alert-modal').style.display = 'flex';
+    }
+    function closeCustomAlert() {
+        document.getElementById('custom-alert-modal').style.display = 'none';
+    }
+
+    function nav(id) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        render();
+    }
+
+    function updateLastSelect(type, val) {
+        if(type === 'home') db.lastHomeIdx = val;
+        if(type === 'pomo') db.lastPomoIdx = val;
+        localStorage.setItem('study_v14', JSON.stringify(db));
+    }
+
+    // --- 普通計時器 ---
+    function handleTimer() {
+        const idx = document.getElementById('home-sub-select').value;
+        if(!idx) return showToast("請先選擇要專注的科目喔！", "提醒", "fa-circle-exclamation");
+        if(!isRunning) {
+            isRunning = true;
+            runningSubjectIdx = idx;
+            document.getElementById('btn-timer').innerText = "結束並儲存";
+            document.getElementById('btn-timer').style.background = "#B7999C";
+            document.getElementById('home-sub-select').disabled = true;
+            timer = setInterval(() => { secRun++; updateClock(); }, 1000);
+        } else {
+            clearInterval(timer);
+            isRunning = false;
+            const minsAdded = secRun / 60;
+            db.subs[runningSubjectIdx].current += minsAdded;
+            updateStreak();
+            secRun = 0;
+            document.getElementById('btn-timer').innerText = "開始專注";
+            document.getElementById('btn-timer').style.background = "#967E76";
+            document.getElementById('home-sub-select').disabled = false;
+            runningSubjectIdx = null;
+            updateClock();
+            save();
+            showToast(`已為該科目增加 ${minsAdded.toFixed(1)} 分鐘。`, "紀錄成功", "fa-check-circle");
+        }
+    }
+
+    function updateClock() {
+        const h = Math.floor(secRun/3600).toString().padStart(2,'0');
+        const m = Math.floor((secRun%3600)/60).toString().padStart(2,'0');
+        const s = (secRun%60).toString().padStart(2,'0');
+        document.getElementById('home-clock').innerText = `${h}:${m}:${s}`;
+    }
+
+    // --- 番茄鐘邏輯 ---
+    function startPomo() {
+        const idx = document.getElementById('pomo-sub-select').value;
+        if(!idx && !isBreak) return showToast("請先選擇要專注的科目！", "提醒");
+
+        if(!isPomoRunning) {
+            isPomoRunning = true;
+            currentPomoSubjectIdx = idx;
+            document.getElementById('pomo-sub-select').disabled = true;
+            document.getElementById('btn-pomo-start').innerText = "暫停";
+            pomoTimer = setInterval(() => {
+                pomoSeconds--;
+                updatePomoDisplay();
+                if(pomoSeconds <= 0) completePomoCycle();
+            }, 1000);
+        } else {
+            clearInterval(pomoTimer);
+            isPomoRunning = false;
+            document.getElementById('btn-pomo-start').innerText = "繼續";
+        }
+    }
+
+    function completePomoCycle() {
+        clearInterval(pomoTimer);
+        isPomoRunning = false;
+        if(!isBreak) {
+            db.subs[currentPomoSubjectIdx].current += 25;
+            save();
+            showToast(`番茄鐘完成！+25分鐘。休息一下吧！`, "專注達成", "fa-mug-hot");
+            pomoSeconds = 300; 
+            isBreak = true;
+            document.getElementById('pomo-status').innerText = "休息時間 ☕";
+        } else {
+            showToast("休息結束！準備開始下一輪專注。", "休息結束", "fa-bolt");
+            pomoSeconds = 1500;
+            isBreak = false;
+            document.getElementById('pomo-status').innerText = "準備好要專注了嗎？";
+            document.getElementById('pomo-sub-select').disabled = false;
+            currentPomoSubjectIdx = null;
+        }
+        document.getElementById('btn-pomo-start').innerText = "開始番茄鐘";
+        updatePomoDisplay();
+    }
+
+    function stopPomoAndSave() {
+        clearInterval(pomoTimer);
+        isPomoRunning = false;
+        if(!isBreak && currentPomoSubjectIdx !== null) {
+            const elapsedMins = (1500 - pomoSeconds) / 60;
+            if(elapsedMins > 0) {
+                db.subs[currentPomoSubjectIdx].current += elapsedMins;
+                save();
+                // V14: 這裡使用新的 showToast 取代原本的 alert
+                showToast(`已提早結算！增加了 ${elapsedMins.toFixed(1)} 分鐘。`, "番茄鐘結算", "fa-stopwatch");
+            }
+        }
+        isBreak = false;
+        pomoSeconds = 1500;
+        document.getElementById('pomo-status').innerText = "準備好要專注了嗎？";
+        document.getElementById('btn-pomo-start').innerText = "開始番茄鐘";
+        document.getElementById('pomo-sub-select').disabled = false;
+        currentPomoSubjectIdx = null;
+        updatePomoDisplay();
+    }
+
+    function updatePomoDisplay() {
+        const m = Math.floor(pomoSeconds/60).toString().padStart(2,'0');
+        const s = (pomoSeconds%60).toString().padStart(2,'0');
+        document.getElementById('pomo-display').innerText = `${m}:${s}`;
+    }
+
+    // --- 數據操作 ---
+    function saveNewSub() {
+        const n = document.getElementById('sub-name').value;
+        const t = parseFloat(document.getElementById('sub-target').value);
+        if(n && t) { db.subs.push({ name: n, target: t * 60, current: 0 }); save(); showToast("科目建立成功！", "成功", "fa-check");}
+    }
+    function addTime(i, inputId) {
+        const v = parseFloat(document.getElementById(inputId).value);
+        if(v > 0) { db.subs[i].current += v; updateStreak(); save(); showToast(`已增加 ${v} 分鐘`, "紀錄成功"); }
+    }
+    function addExam() {
+        const n = document.getElementById('exam-name').value;
+        const d = document.getElementById('exam-date').value;
+        if(n && d) {
+            const id = Date.now();
+            db.exams.push({ id, name: n, date: d });
+            if(!db.pinnedId) db.pinnedId = id;
+            save();
+            showToast("目標日期已新增！");
+        }
+    }
+    function pinExam(id) { db.pinnedId = id; save(); }
+    function delExam(id) { db.exams = db.exams.filter(e => e.id !== id); if(db.pinnedId===id) db.pinnedId=db.exams[0]?.id||null; save(); }
+    function delSub(i) { db.subs.splice(i, 1); save(); }
+
+    function updateStreak() {
+        const today = new Date().toDateString();
+        if (db.lastDate !== today) {
+            if (db.lastDate !== "") {
+                const gap = (new Date(today) - new Date(db.lastDate)) / 86400000;
+                if (gap === 1) db.streak++; else db.streak = 1;
+            } else db.streak = 1;
+            db.lastDate = today;
+        }
+    }
+
+    function resetSystem() {
+        if(confirm("確定要重置所有資料嗎？動作無法復原。")) {
+            localStorage.removeItem('study_v14');
+            location.reload();
+        }
+    }
+
+    function save() {
+        checkBadges();
+        localStorage.setItem('study_v14', JSON.stringify(db));
+        render();
+    }
+
+    // --- 成就 ---
+    function checkBadges() {
+        badgesData.forEach(b => {
+            if (b.check() && !db.unlocked.includes(b.id)) {
+                db.unlocked.push(b.id);
+                showCeleb(b.name, b.icon);
+            }
+        });
+    }
+    function showCeleb(name, icon) {
+        document.getElementById('celeb-name').innerText = name;
+        document.getElementById('celeb-icon-box').innerHTML = `<i class="fa-solid ${icon}"></i>`;
+        document.getElementById('celebration-overlay').style.display = 'flex';
+        badgeSound.currentTime = 0;
+        badgeSound.play().catch(e => {});
+    }
+    function closeCeleb() { document.getElementById('celebration-overlay').style.display = 'none'; }
+
+    // --- Render ---
+    function render() {
+        let curAll = 0, tarAll = 0;
+        const homeSel = document.getElementById('home-sub-select');
+        const pomoSel = document.getElementById('pomo-sub-select');
+        const homeLog = document.getElementById('home-log-grid');
+        const planList = document.getElementById('subjects-plan-list');
+        const examCont = document.getElementById('exam-list-container');
+        const badgeGrid = document.getElementById('badge-grid');
+
+        homeSel.innerHTML = '<option value="">選取科目</option>';
+        pomoSel.innerHTML = '<option value="">請選擇專注科目</option>';
+        homeLog.innerHTML = ""; planList.innerHTML = ""; examCont.innerHTML = ""; badgeGrid.innerHTML = "";
+
+        db.subs.forEach((s, i) => {
+            curAll += s.current; tarAll += s.target;
+            const p = Math.min((s.current/s.target*100), 100).toFixed(0);
+
+            homeSel.innerHTML += `<option value="${i}">${s.name}</option>`;
+            pomoSel.innerHTML += `<option value="${i}">${s.name}</option>`;
+
+            homeLog.innerHTML += `<div class="card" style="padding:20px;">
+                <div style="font-weight:700">${s.name}</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${p}%"></div></div>
+                <div style="display:flex; gap:10px;"><input type="number" id="in-${i}" placeholder="分鐘" style="margin:0"><button onclick="addTime(${i},'in-${i}')">紀錄</button></div>
+            </div>`;
+
+            planList.innerHTML += `<div class="plan-item">
+                <div class="plan-header"><span class="plan-name">${s.name}</span><span style="cursor:pointer;color:#B7999C" onclick="delSub(${i})">移除</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem; color:var(--text-light)">
+                    <span>已讀：${s.current.toFixed(0)} 分鐘</span><span>目標：${s.target} 分鐘</span>
+                </div>
+                <div class="progress-bar-bg" style="height:15px;"><div class="progress-bar-fill" style="width:${p}%"></div></div>
+            </div>`;
+        });
+
+        if (isRunning && runningSubjectIdx !== null) {
+            homeSel.value = runningSubjectIdx; homeSel.disabled = true;
+        } else if (db.lastHomeIdx !== "" && db.subs[db.lastHomeIdx]) {
+            homeSel.value = db.lastHomeIdx; homeSel.disabled = false;
+        }
+
+        if (isPomoRunning && currentPomoSubjectIdx !== null) {
+            pomoSel.value = currentPomoSubjectIdx; pomoSel.disabled = true;
+        } else if (db.lastPomoIdx !== "" && db.subs[db.lastPomoIdx]) {
+            pomoSel.value = db.lastPomoIdx; pomoSel.disabled = false;
+        }
+
+        const totalPct = tarAll > 0 ? Math.min((curAll/tarAll*100), 100).toFixed(0) : 0;
+        document.getElementById('home-pct').innerText = totalPct + "%";
+        document.getElementById('home-bar').style.width = totalPct + "%";
+
+        db.exams.forEach(e => {
+            const d = Math.ceil((new Date(e.date)-new Date())/86400000);
+            const isP = db.pinnedId === e.id;
+            examCont.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><strong>${e.name}</strong><br><small>${e.date} (剩 ${d} 天)</small></div>
+                <div><button class="${isP?'':'secondary'}" onclick="pinExam(${e.id})">${isP?'顯示中':'設為首頁'}</button> <button class="secondary" onclick="delExam(${e.id})">刪除</button></div>
+            </div>`;
+            if(isP) {
+                document.getElementById('home-pinned-title').innerText = `距離 ${e.name} 還有`;
+                document.getElementById('home-days').innerText = d > 0 ? d : "GO!";
+            }
+        });
+
+        badgesData.forEach(b => {
+            const unlocked = db.unlocked.includes(b.id);
+            badgeGrid.innerHTML += `
+                <div class="badge-item ${unlocked ? 'unlocked' : 'locked'}">
+                    <div class="badge-icon"><i class="fa-solid ${b.icon}"></i></div>
+                    <div style="font-weight:700; color:var(--accent-mocha)">${b.name}</div>
+                    <div class="badge-desc">${b.desc}</div>
+                </div>`;
+        });
+        document.getElementById('ach-streak').innerText = db.streak;
+        document.getElementById('ach-badges').innerText = `${db.unlocked.length} / 6`;
+    }
+
+    window.onload = render;
+</script>
+</body>
+</html>
